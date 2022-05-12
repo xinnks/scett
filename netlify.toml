@@ -1,0 +1,20 @@
+
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[functions]
+  directory = "fns/"
+
+[template.environment]
+  VITE_APP_AUTH_ENDPOINT = "VITE_APP_AUTH_ENDPOINT"
+  VITE_APP_ENDPOINT = "VITE_APP_ENDPOINT"
+  VITE_APP_PROJECT = "VITE_APP_PROJECT"
+  VITE_APP_THREADS_COLLECTION_ID = "VITE_APP_THREADS_COLLECTION_ID"
+  VITE_APP_TWITTER_INFO_COLLECTION_ID = "VITE_APP_TWITTER_INFO_COLLECTION_ID"
+  VITE_APP_TW_OAUTH_FUNCTION = "VITE_APP_TW_OAUTH_FUNCTION"

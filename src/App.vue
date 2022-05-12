@@ -1,12 +1,25 @@
 <script setup>
 // This starter template is using Vue 3 <script setup> SFCs
 // Check out https://vuejs.org/api/sfc-script-setup.html#script-setup
-import HelloWorld from './components/HelloWorld.vue'
+import  { watch, computed } from 'vue';
+import { useRouter } from 'vue-router';
+import  { useStore } from 'vuex';
+
+const store = useStore();
+const router = useRouter();
+
+let checkAuth = computed(() => store.getters.getUser)
+watch(checkAuth, (val) => {
+  if(!val){
+    store.dispatch('LOGOUT');
+    router.replace('/login')
+    console.log("Logging Out!!")
+  }
+} )
 </script>
 
 <template>
-  <img alt="Vue logo" src="./assets/logo.png" />
-  <HelloWorld msg="Hello Vue 3 + Vite" />
+  <router-view/>
 </template>
 
 <style>
@@ -14,8 +27,8 @@ import HelloWorld from './components/HelloWorld.vue'
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-align: center;
   color: #2c3e50;
-  margin-top: 60px;
+  margin: 0;
+  padding: 0;
 }
 </style>

@@ -1,0 +1,28 @@
+{
+    "projectId": "62580fbe62b0d5436195",
+    "projectName": "Scheduled Threads ",
+    "functions": [
+        {
+            "$id": "6276c438a88f304f49c7",
+            "name": "Tweets Envoyer",
+            "runtime": "node-16.0",
+            "path": "functions/Tweets Envoyer",
+            "entrypoint": "src/index.js",
+            "execute": [],
+            "events": [],
+            "schedule": "",
+            "timeout": 150
+        },
+        {
+            "$id": "627c1b341e2d7d068113",
+            "name": "Twitter Oauth",
+            "runtime": "node-16.0",
+            "path": "functions/Twitter Oauth",
+            "entrypoint": "src/index.js",
+            "execute": [],
+            "events": [],
+            "schedule": "",
+            "timeout": 15
+        }
+    ]
+}
