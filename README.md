@@ -1,7 +1,19 @@
-# Vue 3 + Vite
+# Scett
 
-This template should help get you started developing with Vue 3 in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+<center>
+<img height="80" width="80" src="https://dev-to-uploads.s3.amazonaws.com/uploads/articles/5y05rvk61e43rlrc5z66.png">
+</center>
 
-## Recommended IDE Setup
+<center><strong>Scett helps you schedule your twitter threads.</strong></center>
+<center>
+  <i><b>Sc</b>h<b>e</b>duled <b>T</b>witter <b>T</b>hreads</i>
+</center>
 
-- [VS Code](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.volar)
+&nbsp;
+## Powered By
+- [Appwrite](https://github.com/appwrite/appwrite)
+- [Vue](https://github.com/vuejs/vue)
+- [vuex](https://github.com/vuejs/vuex)
+- [vue-router](https://github.com/vuejs/router)
+- [node-twitter-api-v2](https://github.com/PLhery/node-twitter-api-v2)
+- [Tailwindcss](https://github.com/tailwindlabs/tailwindcss)
