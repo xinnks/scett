@@ -8,6 +8,9 @@
   to = "/index.html"
   status = 200
 
+[functions]
+  directory = "fns/"
+
 [template.environment]
   VITE_APP_AUTH_ENDPOINT = "VITE_APP_AUTH_ENDPOINT"
   VITE_APP_ENDPOINT = "VITE_APP_ENDPOINT"
