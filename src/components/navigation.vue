@@ -1,12 +1,16 @@
 <script setup>
 import { ref } from 'vue';
+import { useRouter } from 'vue-router';
 import { useStore } from 'vuex';
 
 const store = useStore();
-let navToggle = ref(false);
+const router = useRouter();
 
-const logOut = () => {
-  store.dispatch('LOGOUT');
+const logOut = async () => {
+  let loggedOut = await store.dispatch('LOGOUT');
+  if(loggedOut){
+    router.replace('/login');
+  }
 }
 </script>
 
