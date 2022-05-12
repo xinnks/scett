@@ -1,5 +1,6 @@
 import { createApp } from 'vue'
 import { router } from './router'
+import { store } from './store'
 import App from './App.vue'
 import "./index.css"
 
@@ -13,5 +14,7 @@ router.beforeEach((to, from) => {
     return {path: '/dashboard'}
   }
 })
+
+scett.use(store)
 scett.use(router)
 scett.mount('#app')
