@@ -172,6 +172,149 @@ const account = {
     },
   },
 }
+
+const threads = {
+  state: {
+    threads: [],
+  },
+  getters: {
+    threads: state => state.threads
+  },
+  mutations: {
+    /***
+     * @description Adds a new thread
+     * @param {Object} thread => {$id, title, postTime, tweets}
+     */
+    async populateThreads(state, threads){
+      state.threads = threads;
+    },
+    /***
+     * @description Adds a new thread
+     * @param {Object} thread => {$id, title, postTime, tweets}
+     */
+    async addThread(state, thread){
+      state.threads.push(thread);
+    },
+    /***
+     * @description Updates a thred
+     * @param {Object} data => {threadId, title, postTime}
+     */
+    async updateThread(state, data){
+      const index = state.threads.findIndex(
+        (thread) => thread["$id"] === data["$id"]
+      );
+      if (index !== -1) {
+        state.threads.splice(index, 1, data);
+      }
+    },
+    /***
+     * @description Deletes a thread
+     * @param {string} threadId
+     */
+    async deleteThread(state, threadId){
+      state.threads = state.threads.filter(thread => thread["$id"] !== threadId);
+    },
+    /***
+     * @description Updates a tweet within a thread
+     * @param {String} threadId
+     * @param {Object} tweet => {id, text}
+     */
+    async updateTweets(state, {threadId, tweets}) {
+      const threadIndex = state.threads.findIndex(
+        (thread) => thread["$id"] === threadId
+      );
+      if (threadIndex !== -1) {
+        state.threads[threadIndex].tweets = tweets;
+      }
+    },
+    /***
+     * @description Adds a tweet to a thread
+     * @param {String} threadId
+     * @param {Object} tweet => {id, text}
+     */
+    async addTweet(state, {threadId, tweet}) {
+      for(let i = 0; i < state.threads.length; i++){
+        if(state.thread[i]["$id"] === threadId){
+          state.thread[i].tweets.push(tweet);
+        }
+      }
+    },
+    /***
+     * @description deletes a tweet from a thread
+     * @param {String} threadId
+     * @param {Object} tweet => {id}
+     */
+    async deleteTweets(state, {threadId, tweet: {id}}) {
+      const threadIndex = state.threads.findIndex(
+        (thread) => thread["$id"] === threadId
+      );
+      if (threadIndex !== -1) {
+        state.threads[threadIndex].tweets = state.threads[threadIndex].tweets.filter(tweet => tweet.id === id)
+      }
+    }
+  },
+  actions: {
+    GET_THREADS: async ({commit}) => {
+      try{
+        const response = await api.listDocuments(Vars.threadsCollection);
+        commit('populateThreads', response.documents)
+      } catch(error){
+        commit('notify', {show: true, type: 'error', message: 'Failed to get threads'})
+      }
+    },
+    ADD_THREAD: async ({commit, rootState, dispatch}, data) => {
+      try{
+        let readWrite = ['user:' + rootState.account.user["$id"]]
+        const response = await api.createDocument(
+          Vars.threadsCollection,
+          {...data, userID: rootState.account.user["$id"]},
+          readWrite,
+          readWrite
+        );
+        commit('addThread', response)
+        dispatch('GET_THREADS')
+        return true;
+      } catch(error){
+        commit('notify', {show: true, type: 'error', message: 'Failed to add thread'})
+        return false;
+      }
+    },
+    UPDATE_THREAD: async ({commit, rootState}, thread) => {
+      try{
+        let submittion = JSON.parse(JSON.stringify(thread));
+        let finalData = Object.assign(submittion, {postTime: Date.parse(thread.postingDate + ' ' + thread.postingTime), tweets: submittion.tweets.map( tw => tw.text)});
+        delete finalData.postingDate;
+        delete finalData.postingTime;
+        delete finalData.rawPostTime;
+        delete finalData['$id'];
+        delete finalData['$collection'];
+        const response = await api.updateDocument(Vars.threadsCollection, thread['$id'], finalData, thread["$read"], thread["$write"]);
+        commit('updateThread', response)
+        commit('notify', {show: true, type: 'success', timeout: 3000, message: 'Thread Updated'})
+      } catch(error){
+        commit('notify', {show: true, type: 'error', message: 'Failed to update thread'})
+      }
+    },
+    DELETE_THREAD: async ({commit}, documentId) => {
+      try{
+        await api.deleteDocument(Vars.threadsCollection, documentId);
+        commit('deleteThread', documentId)
+        commit('notify', {show: true, type: 'success', timeout: 3000, message: 'Thread Deleted'})
+      } catch(error){
+        commit('notify', {show: true, type: 'error', message: 'Failed to delete thread'})
+      }
+    },
+    UPDATE_TWEETS: async ({commit}, {documentId, tweets}) => {
+      try{
+        await api.updateDocument(Vars.threadsCollection, documentId, {tweets}, read, write);
+        commit('updateThread', {documentId, tweets})
+      } catch(error){
+        commit('notify', {show: true, type: 'error', message: 'Failed to update tweets'})
+      }
+    },
+  },
+}
+
 export const store = createStore({
   state: {
     notification: null,
@@ -211,6 +354,7 @@ export const store = createStore({
   },
   modules: {
     account,
+    threads
   },
   plugins: [vuexLocal.plugin]
 })
