@@ -137,13 +137,22 @@ const account = {
                 // twitter oauth step 3
                 stopInterval(intervalId);
                 dispatch('SAVE_TWITTER_DATA', responseData.twitterData);
+                dispatch('SAVE_TEMP_DATA', Object.assign(rootState.tempData, {updatingTwitterData: {
+                  time: Date.parse(new Date()),
+                  status: true}
+                }));
+                commit('notify', {show: true, type: 'success', message: 'Twitter information updated'});
               }
             }
             if(responseData.user.$id === state.user.$id && responseData.status === "failure"){
               // twitter Failure
               stopInterval(intervalId);
-              commit('notify', {show: true, type: 'error', message: 'Could not authenticate twitter, please retry'});
+              commit('notify', {show: true, type: 'error', timeout: 10000, message: 'Failed to finalize twitter authorization, please retry'})
               dispatch('LOADING') // stop loading
+              dispatch('SAVE_TEMP_DATA', Object.assign(rootState.tempData, {updatingTwitterData: {
+                time: Date.parse(new Date()),
+                status: false}
+              }));
             }
           }
           if(count >= 15){
