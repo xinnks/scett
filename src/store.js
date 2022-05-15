@@ -85,16 +85,32 @@ const account = {
         // Check if already added
         let exists = await api.getTwitterInfo(state.user.$id);
         if(exists.documents.length){ // update
-          response = await api.updateDocument(Vars.twitterInfoCollection, exists.documents[0]["$id"], newTwitterData, permissions, permissions);
+          try {
+            await api.updateDocument(Vars.twitterInfoCollection, exists.documents[0]["$id"], newTwitterData, permissions, permissions);
+          } catch (error) {
+            commit("notify", {
+              show: true,
+              message: error.message,
+              type: "error",
+            });
+          }
         } else {
-          response = await api.createDocument(
-            Vars.twitterInfoCollection,
-            newTwitterData,
-            permissions,
-            permissions
-          );
+          try {
+            await api.createDocument(
+              Vars.twitterInfoCollection,
+              newTwitterData,
+              permissions,
+              permissions
+            );
+          } catch (error) {
+            commit("notify", {
+              show: true,
+              message: error.message,
+              type: "error",
+            });
+          }
         }
-        commit('updateTwitterInfo', {handle: data.twitterHandle});
+        dispatch('GET_TWITTER_INFO');
         dispatch('SAVE_TEMP_DATA', Object.assign(rootState.tempData, {updatedTwitterData: true}));
         commit('notify', {show: true, type: 'success', message: 'Twitter information updated'});
         dispatch('LOADING') // stop loading
