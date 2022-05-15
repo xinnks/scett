@@ -19,6 +19,7 @@ const authenticate = async () => {
   let storedData = store.getters.getTempData;
   let watchStoredTempData = computed(() => store.getters.getTempData);
   let {tempOauthTokenSecret} = storedData.oauthRequest.oauthStepOneTokens;
+  store.dispatch('TWITTER_OAUTH', {type: 'step-3', oauthTokenSecret: tempOauthTokenSecret, oauthToken: oauth_token, oauthVerifier: oauth_verifier});
   watch(watchStoredTempData, async (val) => {
     if(val.updatingTwitterData.status){
       router.replace('/dashboard');
