@@ -304,7 +304,7 @@ const threads = {
         return false;
       }
     },
-    UPDATE_THREAD: async ({commit, rootState}, thread) => {
+    UPDATE_THREAD: async ({ commit }, thread) => {
       try{
         let submittion = JSON.parse(JSON.stringify(thread));
         let finalData = Object.assign(submittion, {postTime: Date.parse(thread.postingDate + ' ' + thread.postingTime), tweets: submittion.tweets.map( tw => tw.text)});
