@@ -1,9 +1,15 @@
-const { Client, Database } = require("node-appwrite");
+const { Query, Client, Database } = require("node-appwrite");
 const crypto = require('crypto');
 const { TwitterApi } = require('twitter-api-v2');
 
 const algorithm = 'aes-256-ctr';
 
+/**
+ * @description Decrypts the stored tokens into viable tokens using provided secret key
+ * @param {Sting} hash 
+ * @param {String} secretKey 
+ * @returns {String}
+ */
 const decrypt = (hash, secretKey) => {
     const [usedIv, secret] = hash.split("***")
     const decipher = crypto.createDecipheriv(algorithm, secretKey, Buffer.from(usedIv, 'hex'));
@@ -43,18 +49,19 @@ module.exports = async function (req, res) {
   }
 
   // posting tweets 
-  let threadsToPost = await database.listDocuments(THREADS_COLLECTION_ID);
-
-  // create array containing user threads containing threads with timeFloor <= postTime =< timeCeil to take into account of latency
-  let filteredThreads = threadsToPost.total ? threadsToPost.documents.filter(doc => doc.postTime >= timeFloor && timeCeil > doc.postTime) : [];
+  // create array containing user threads with timeFloor <= postTime <= timeCeil to take into account of possible cron call latency
+  let threadsToPost = await database.listDocuments(THREADS_COLLECTION_ID, [
+    Query.lesserEqual('postTime', [timeCeil]),
+    Query.greaterEqual('postTime', [timeFloor])
+  ]);
   
   // fetch all users with posting permissions
   let twitterPermittedUsers = await database.listDocuments(TWITTER_INFO_COLLECTION_ID);
-  let postedPosts = [];
+  let postRequests = [];
+  let posted, errors;
 
-  if(filteredThreads.length){
-    let posted = 0, notPosted = 0, errors = 0;
-    for(const thread of filteredThreads){
+  if(threadsToPost.total){
+    for(const thread of threadsToPost.documents){
       let permissionData = twitterPermittedUsers.documents.find(u => u.userID === thread.userID);
       if(thread.tweets.length && permissionData !== undefined){
         let { token, secret } = permissionData;
@@ -67,28 +74,24 @@ module.exports = async function (req, res) {
           accessSecret: userSecret,
         });
         
-        await userClient.v1.tweetThread(thread.tweets)
-        postedPosts.push({
-          tweets: thread.tweets,
-          user: {
-            key: userToken,
-            secret: userSecret
-          },
-          client: {
-            key: TWITTER_CONSUMER_KEY,
-            secret: TWITTER_CONSUMER_SECRET
-          },
-        });
+        postRequests.push(userClient.v1.tweetThread(thread.tweets));
         posted++;
-      } else {
-        notPosted++;
       }
-      res.json({
-        status: `Posted ${posted} [${errors} errors] Threads for ${timeFloor} <= time >= ${timeCeil}`,
-        posted,
-        postedPosts,
-        notPosted
-      });
     }
   }
+
+  // post threads
+  try {
+    posted = await Promise.all(postRequests);
+  } catch(error) {
+    errors = error
+  }
+
+  res.json({
+    status: `between ${timeFloor} and ${timeCeil}`,
+    threadsToPost,
+    postRequests,
+    posted,
+    errors
+  });
 };

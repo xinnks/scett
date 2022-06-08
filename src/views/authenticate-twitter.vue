@@ -1,6 +1,6 @@
 <script setup>
 import pageVue from './../layouts/page.vue';
-import { watch } from 'vue';
+import { watch, computed } from 'vue';
 import { useStore } from 'vuex';
 import { useRoute, useRouter } from 'vue-router';
 
@@ -8,30 +8,40 @@ const store = useStore();
 const router = useRouter();
 const route = useRoute();
 
-let { oauth_token, oauth_verifier } = route.query;
-
 /** Continue twitter authentication */
 const authenticate = async () => {
+  let { oauth_token, oauth_verifier } = route.query;
   if(!oauth_token || !oauth_verifier) {
     missing("You have not authenticated the app")
     return false;
   }
   store.dispatch('LOADING', {show: true, message: "Finalizing Twitter Authentication"})
   let storedData = store.getters.getTempData;
+  let watchStoredTempData = computed(() => store.getters.getTempData);
   let {tempOauthTokenSecret} = storedData.oauthRequest.oauthStepOneTokens;
-  await store.dispatch('TWITTER_OAUTH', {type: 'step-3', oauthTokenSecret: tempOauthTokenSecret, oauthToken: oauth_token, oauthVerifier: oauth_verifier});
-  watch(store.getters.getTempData, async (val) => {
-    if(val.updatedTwitterData){
+  store.dispatch('TWITTER_OAUTH', {type: 'step-3', oauthTokenSecret: tempOauthTokenSecret, oauthToken: oauth_token, oauthVerifier: oauth_verifier});
+  watch(watchStoredTempData, async (val) => {
+    if(val.updatingTwitterData.status){
       router.replace('/dashboard');
       store.dispatch('LOADING') // stop loading
-      store.dispatch('SAVE_TEMP_DATA', null) // clear temp data
+      setTimeout(() => {
+        store.dispatch('SAVE_TEMP_DATA', {}) // clear temp data
+      }, 3000)
+    } else {
+      setTimeout(() => {
+        store.dispatch('SAVE_TEMP_DATA', {}) // clear temp data
+      router.push('/dashboard');
+      }, 3000)
     }
-    setTimeout(() => {
-      router.replace('/dashboard');
-    }, 2000)
-  })
+  }, {deep: true})
 }
-authenticate();
+if(route.query.denied !== undefined){
+  store.commit('notify', {show: true, type: 'error', message: 'Twitter access was denied!', timeout: 5000});
+  store.dispatch('LOADING') // stop loading
+  router.replace('/dashboard');
+} else {
+  authenticate();
+}
 </script>
 
 

@@ -1,5 +1,5 @@
 <script setup>
-import { computed, watch } from 'vue';
+import { computed, watch, onMounted } from 'vue';
 import { useStore } from 'vuex';
 
 const store = useStore();
@@ -17,7 +17,15 @@ watch(noty, (val) => {
   if(val) {
     setTimeout(() => {
       store.dispatch('CLEAR_NOTIFICATION');
-    }, noty.value.timeout || 5000)
+    }, val.timeout || 5000);
+  }
+})
+
+onMounted(() => {
+  if(noty.value){
+    setTimeout(() => {
+      store.dispatch('CLEAR_NOTIFICATION');
+    }, noty.value.timeout || 5000);
   }
 })
 </script>

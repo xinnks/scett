@@ -85,16 +85,32 @@ const account = {
         // Check if already added
         let exists = await api.getTwitterInfo(state.user.$id);
         if(exists.documents.length){ // update
-          response = await api.updateDocument(Vars.twitterInfoCollection, exists.documents[0]["$id"], newTwitterData, permissions, permissions);
+          try {
+            await api.updateDocument(Vars.twitterInfoCollection, exists.documents[0]["$id"], newTwitterData, permissions, permissions);
+          } catch (error) {
+            commit("notify", {
+              show: true,
+              message: error.message,
+              type: "error",
+            });
+          }
         } else {
-          response = await api.createDocument(
-            Vars.twitterInfoCollection,
-            newTwitterData,
-            permissions,
-            permissions
-          );
+          try {
+            await api.createDocument(
+              Vars.twitterInfoCollection,
+              newTwitterData,
+              permissions,
+              permissions
+            );
+          } catch (error) {
+            commit("notify", {
+              show: true,
+              message: error.message,
+              type: "error",
+            });
+          }
         }
-        commit('updateTwitterInfo', {handle: data.twitterHandle});
+        dispatch('GET_TWITTER_INFO');
         dispatch('SAVE_TEMP_DATA', Object.assign(rootState.tempData, {updatedTwitterData: true}));
         commit('notify', {show: true, type: 'success', message: 'Twitter information updated'});
         dispatch('LOADING') // stop loading
@@ -121,13 +137,22 @@ const account = {
                 // twitter oauth step 3
                 stopInterval(intervalId);
                 dispatch('SAVE_TWITTER_DATA', responseData.twitterData);
+                dispatch('SAVE_TEMP_DATA', Object.assign(rootState.tempData, {updatingTwitterData: {
+                  time: Date.parse(new Date()),
+                  status: true}
+                }));
+                commit('notify', {show: true, type: 'success', message: 'Twitter information updated'});
               }
             }
             if(responseData.user.$id === state.user.$id && responseData.status === "failure"){
               // twitter Failure
               stopInterval(intervalId);
-              commit('notify', {show: true, type: 'error', message: 'Could not authenticate twitter, please retry'});
+              commit('notify', {show: true, type: 'error', timeout: 10000, message: 'Failed to finalize twitter authorization, please retry'})
               dispatch('LOADING') // stop loading
+              dispatch('SAVE_TEMP_DATA', Object.assign(rootState.tempData, {updatingTwitterData: {
+                time: Date.parse(new Date()),
+                status: false}
+              }));
             }
           }
           if(count >= 15){
@@ -279,7 +304,7 @@ const threads = {
         return false;
       }
     },
-    UPDATE_THREAD: async ({commit, rootState}, thread) => {
+    UPDATE_THREAD: async ({ commit }, thread) => {
       try{
         let submittion = JSON.parse(JSON.stringify(thread));
         let finalData = Object.assign(submittion, {postTime: Date.parse(thread.postingDate + ' ' + thread.postingTime), tweets: submittion.tweets.map( tw => tw.text)});
